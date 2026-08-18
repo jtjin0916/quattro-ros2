@@ -1,0 +1,410 @@
+<?xml version="1.0"?>
+<robot name="quattro" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+	<!-- QUATTRO Parameters -->
+	<xacro:property name="shoulder_length" value="0.0905"/>
+	<xacro:property name="elbow_length" value="0.210"/>
+	<xacro:property name="wrist_length" value="0.210"/>
+	<xacro:property name="hip_x" value="0.2025"/>
+	<xacro:property name="hip_y" value="0.06"/>
+
+	<!-- Collision dimensions -->
+	<xacro:property name="body_length" value="0.81"/>
+	<xacro:property name="body_width" value="0.24"/>
+	<xacro:property name="body_height" value="0.10"/>
+
+	<xacro:property name="hip_box_x" value="0.05"/>
+	<xacro:property name="hip_box_y" value="0.05"/>
+	<xacro:property name="hip_box_z" value="0.05"/>
+
+	<xacro:property name="upper_radius" value="0.020"/>
+	<xacro:property name="lower_radius" value="0.018"/>
+	<xacro:property name="foot_radius" value="0.025"/>
+
+	<material name="orange">
+		<color rgba="1.0 0.5 0.0 1.0"/>
+	</material>
+
+	<material name="black">
+		<color rgba="0.1 0.1 0.1 1.0"/>
+	</material>
+
+	<material name="grey">
+		<color rgba="0.6 0.6 0.6 1.0"/>
+	</material>
+
+	<!-- Root -->
+	<link name="base_link"/>
+
+	<link name="base_inertia">
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="package://quattro_description/stl/body_frame.stl" scale="1 1 1"/>
+			</geometry>
+			<material name="orange"/>
+		</visual>
+
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<box size="${body_length} ${body_width} ${body_height}"/>
+			</geometry>
+		</collision>
+
+		<inertial>
+			<origin xyz="0.001210 -0.000887 -0.007933" rpy="0 0 0"/>
+			<mass value="3.092"/>
+			<inertia
+				ixx="0.012720949" ixy="0.000098785" ixz="-0.000130401"
+				iyy="0.034500612" iyz="0.000097314"
+				izz="0.043632308"/>
+		</inertial>
+	</link>
+
+	<joint name="base_base" type="fixed">
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<parent link="base_link"/>
+		<child link="base_inertia"/>
+	</joint>
+
+	<!-- Leg macro -->
+	<xacro:macro name="quattro_leg" params="
+		prefix
+		hip_origin_x
+		hip_origin_y
+		shoulder_sign
+		hip_mesh
+		upper_mesh
+		lower_mesh
+		hip_mass
+		hip_com_x
+		hip_com_y
+		hip_com_z
+		hip_ixx
+		hip_ixy
+		hip_ixz
+		hip_iyy
+		hip_iyz
+		hip_izz
+		upper_mass
+		upper_com_x
+		upper_com_y
+		upper_com_z
+		upper_ixx
+		upper_ixy
+		upper_ixz
+		upper_iyy
+		upper_iyz
+		upper_izz
+		lower_mass
+		lower_com_x
+		lower_com_y
+		lower_com_z
+		lower_ixx
+		lower_ixy
+		lower_ixz
+		lower_iyy
+		lower_iyz
+		lower_izz">
+
+		<link name="${prefix}_hip">
+			<visual>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<geometry>
+					<mesh filename="package://quattro_description/stl/${hip_mesh}" scale="1 1 1"/>
+				</geometry>
+				<material name="black"/>
+			</visual>
+
+			<collision>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<geometry>
+					<box size="${hip_box_x} ${hip_box_y} ${hip_box_z}"/>
+				</geometry>
+			</collision>
+
+			<inertial>
+				<origin xyz="${hip_com_x} ${hip_com_y} ${hip_com_z}" rpy="0 0 0"/>
+				<mass value="${hip_mass}"/>
+				<inertia
+					ixx="${hip_ixx}" ixy="${hip_ixy}" ixz="${hip_ixz}"
+					iyy="${hip_iyy}" iyz="${hip_iyz}"
+					izz="${hip_izz}"/>
+			</inertial>
+		</link>
+
+		<joint name="motor_${prefix}_hip" type="revolute">
+			<axis xyz="1 0 0"/>
+			<origin xyz="${hip_origin_x} ${hip_origin_y} 0" rpy="0 0 0"/>
+			<parent link="base_link"/>
+			<child link="${prefix}_hip"/>
+			<limit effort="40.0" lower="-1.04" upper="1.04" velocity="4.0"/>
+			<dynamics damping="0.0" friction="0.0"/>
+		</joint>
+
+		<link name="${prefix}_upper_leg">
+			<visual>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<geometry>
+					<mesh filename="package://quattro_description/stl/${upper_mesh}" scale="1 1 1"/>
+				</geometry>
+				<material name="black"/>
+			</visual>
+
+			<collision>
+				<origin xyz="0 0 -${elbow_length / 2.0}" rpy="0 0 0"/>
+				<geometry>
+					<cylinder radius="${upper_radius}" length="${elbow_length}"/>
+				</geometry>
+			</collision>
+
+			<inertial>
+				<origin xyz="${upper_com_x} ${upper_com_y} ${upper_com_z}" rpy="0 0 0"/>
+				<mass value="${upper_mass}"/>
+				<inertia
+					ixx="${upper_ixx}" ixy="${upper_ixy}" ixz="${upper_ixz}"
+					iyy="${upper_iyy}" iyz="${upper_iyz}"
+					izz="${upper_izz}"/>
+			</inertial>
+		</link>
+
+		<joint name="motor_${prefix}_upper_leg" type="revolute">
+			<axis xyz="0 1 0"/>
+			<origin xyz="0 ${shoulder_sign * shoulder_length} 0" rpy="0 0 0"/>
+			<parent link="${prefix}_hip"/>
+			<child link="${prefix}_upper_leg"/>
+			<limit effort="40.0" lower="-1.57079632679" upper="2.59" velocity="4.0"/>
+			<dynamics damping="0.0" friction="0.0"/>
+		</joint>
+
+		<link name="${prefix}_lower_leg">
+			<visual>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<geometry>
+					<mesh filename="package://quattro_description/stl/${lower_mesh}" scale="1 1 1"/>
+				</geometry>
+				<material name="black"/>
+			</visual>
+
+			<collision>
+				<origin xyz="0 0 -${wrist_length / 2.0}" rpy="0 0 0"/>
+				<geometry>
+					<cylinder radius="${lower_radius}" length="${wrist_length}"/>
+				</geometry>
+			</collision>
+
+			<inertial>
+				<origin xyz="${lower_com_x} ${lower_com_y} ${lower_com_z}" rpy="0 0 0"/>
+				<mass value="${lower_mass}"/>
+				<inertia
+					ixx="${lower_ixx}" ixy="${lower_ixy}" ixz="${lower_ixz}"
+					iyy="${lower_iyy}" iyz="${lower_iyz}"
+					izz="${lower_izz}"/>
+			</inertial>
+		</link>
+
+		<joint name="motor_${prefix}_lower_leg" type="revolute">
+			<axis xyz="0 1 0"/>
+			<origin xyz="0 0 -${elbow_length}" rpy="0 0 0"/>
+			<parent link="${prefix}_upper_leg"/>
+			<child link="${prefix}_lower_leg"/>
+			<limit effort="40.0" lower="-2.9" upper="1.57079632679" velocity="4.0"/>
+			<dynamics damping="0.0" friction="0.0"/>
+		</joint>
+
+		<link name="${prefix}_foot">
+			<visual>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<geometry>
+					<sphere radius="${foot_radius}"/>
+				</geometry>
+				<material name="grey"/>
+			</visual>
+
+			<collision>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<geometry>
+					<sphere radius="${foot_radius}"/>
+				</geometry>
+			</collision>
+
+			<inertial>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<mass value="0.05"/>
+				<inertia
+					ixx="0.00005" ixy="0.0" ixz="0.0"
+					iyy="0.00005" iyz="0.0"
+					izz="0.00005"/>
+			</inertial>
+		</link>
+
+		<joint name="${prefix}_leg_foot" type="fixed">
+			<origin xyz="0 0 -${wrist_length}" rpy="0 0 0"/>
+			<parent link="${prefix}_lower_leg"/>
+			<child link="${prefix}_foot"/>
+		</joint>
+
+	</xacro:macro>
+
+	<!-- Front Left -->
+	<xacro:quattro_leg
+		prefix="front_left"
+		hip_origin_x="${hip_x}"
+		hip_origin_y="${hip_y}"
+		shoulder_sign="1"
+		hip_mesh="hip_1.stl"
+		upper_mesh="upper_leg_left.stl"
+		lower_mesh="lower_leg_left.stl"
+		hip_mass="0.421"
+		hip_com_x="-0.003000"
+		hip_com_y="-0.000913"
+		hip_com_z="-0.000423"
+		hip_ixx="0.000208442"
+		hip_ixy="-0.000000970"
+		hip_ixz="0.000003590"
+		hip_iyy="0.000347130"
+		hip_iyz="-0.000002271"
+		hip_izz="0.000242004"
+		upper_mass="0.823"
+		upper_com_x="0.000110"
+		upper_com_y="-0.017289"
+		upper_com_z="-0.042003"
+		upper_ixx="0.004380506"
+		upper_ixy="0.000001190"
+		upper_ixz="-0.000003916"
+		upper_iyy="0.004394642"
+		upper_iyz="0.000544858"
+		upper_izz="0.000779349"
+		lower_mass="0.170"
+		lower_com_x="-0.000176"
+		lower_com_y="0.000000"
+		lower_com_z="-0.034133"
+		lower_ixx="0.000604957"
+		lower_ixy="0.000000008"
+		lower_ixz="0.000000277"
+		lower_iyy="0.000622383"
+		lower_iyz="0.000000013"
+		lower_izz="0.000025776"/>
+
+	<!-- Front Right -->
+	<xacro:quattro_leg
+		prefix="front_right"
+		hip_origin_x="${hip_x}"
+		hip_origin_y="${-hip_y}"
+		shoulder_sign="-1"
+		hip_mesh="hip_2.stl"
+		upper_mesh="upper_leg_right.stl"
+		lower_mesh="lower_leg_right.stl"
+		hip_mass="0.421"
+		hip_com_x="-0.003304"
+		hip_com_y="0.000913"
+		hip_com_z="-0.000118"
+		hip_ixx="0.000208731"
+		hip_ixy="0.000001164"
+		hip_ixz="0.000003220"
+		hip_iyy="0.000346391"
+		hip_iyz="0.000002078"
+		hip_izz="0.000240976"
+		upper_mass="0.823"
+		upper_com_x="-0.000110"
+		upper_com_y="0.017289"
+		upper_com_z="-0.042003"
+		upper_ixx="0.004380506"
+		upper_ixy="0.000001190"
+		upper_ixz="0.000003916"
+		upper_iyy="0.004394642"
+		upper_iyz="-0.000544858"
+		upper_izz="0.000779349"
+		lower_mass="0.170"
+		lower_com_x="0.000176"
+		lower_com_y="0.000000"
+		lower_com_z="-0.034133"
+		lower_ixx="0.000604957"
+		lower_ixy="0.000000008"
+		lower_ixz="-0.000000277"
+		lower_iyy="0.000622383"
+		lower_iyz="-0.000000013"
+		lower_izz="0.000025776"/>
+
+	<!-- Back Left -->
+	<xacro:quattro_leg
+		prefix="back_left"
+		hip_origin_x="${-hip_x}"
+		hip_origin_y="${hip_y}"
+		shoulder_sign="1"
+		hip_mesh="hip_3.stl"
+		upper_mesh="upper_leg_left.stl"
+		lower_mesh="lower_leg_left.stl"
+		hip_mass="0.421"
+		hip_com_x="0.003304"
+		hip_com_y="-0.000713"
+		hip_com_z="-0.000118"
+		hip_ixx="0.000208731"
+		hip_ixy="0.000001164"
+		hip_ixz="-0.000003220"
+		hip_iyy="0.000346392"
+		hip_iyz="-0.000002078"
+		hip_izz="0.000240976"
+		upper_mass="0.823"
+		upper_com_x="0.000110"
+		upper_com_y="-0.017289"
+		upper_com_z="-0.042003"
+		upper_ixx="0.004380506"
+		upper_ixy="0.000001190"
+		upper_ixz="-0.000003916"
+		upper_iyy="0.004394642"
+		upper_iyz="0.000544858"
+		upper_izz="0.000779349"
+		lower_mass="0.170"
+		lower_com_x="-0.000176"
+		lower_com_y="0.000000"
+		lower_com_z="-0.034133"
+		lower_ixx="0.000604957"
+		lower_ixy="0.000000008"
+		lower_ixz="0.000000277"
+		lower_iyy="0.000622383"
+		lower_iyz="0.000000013"
+		lower_izz="0.000025776"/>
+
+	<!-- Back Right -->
+	<xacro:quattro_leg
+		prefix="back_right"
+		hip_origin_x="${-hip_x}"
+		hip_origin_y="${-hip_y}"
+		shoulder_sign="-1"
+		hip_mesh="hip_4.stl"
+		upper_mesh="upper_leg_right.stl"
+		lower_mesh="lower_leg_right.stl"
+		hip_mass="0.421"
+		hip_com_x="0.003000"
+		hip_com_y="0.001113"
+		hip_com_z="-0.000423"
+		hip_ixx="0.000208442"
+		hip_ixy="-0.000000970"
+		hip_ixz="-0.000003590"
+		hip_iyy="0.000347130"
+		hip_iyz="0.000002271"
+		hip_izz="0.000242004"
+		upper_mass="0.823"
+		upper_com_x="-0.000110"
+		upper_com_y="0.017289"
+		upper_com_z="-0.042003"
+		upper_ixx="0.004380506"
+		upper_ixy="0.000001190"
+		upper_ixz="0.000003916"
+		upper_iyy="0.004394642"
+		upper_iyz="-0.000544858"
+		upper_izz="0.000779349"
+		lower_mass="0.170"
+		lower_com_x="0.000176"
+		lower_com_y="0.000000"
+		lower_com_z="-0.034133"
+		lower_ixx="0.000604957"
+		lower_ixy="0.000000008"
+		lower_ixz="-0.000000277"
+		lower_iyy="0.000622383"
+		lower_iyz="-0.000000013"
+		lower_izz="0.000025776"/>
+
+</robot>

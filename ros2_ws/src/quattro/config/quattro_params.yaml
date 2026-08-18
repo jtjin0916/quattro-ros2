@@ -1,0 +1,28 @@
+/**:
+  ros__parameters:
+    # MEASURE (Quattro 서보 로봇 실측값 — 로봇에 맞게 수정 필요)
+    shoulder_length: 0.055
+    elbow_length: 0.10652
+    wrist_length: 0.145
+    hip_x: 0.23
+    hip_y: 0.075
+    foot_x: 0.23
+    foot_y: 0.185
+    height: 0.19
+    com_offset: -0.005
+
+    # 관절 제한값 (IK 좌표계 기준, degrees) — 서보 물리 한계 기준
+    joint_lo: [-31.4, -124.3, -124.3, -31.4, -124.3, -124.3, -31.4, -124.3, -124.3, -31.4, -124.3, -124.3]
+    joint_hi: [31.4, 124.3, 124.3, 31.4, 124.3, 124.3, 31.4, 124.3, 124.3, 31.4, 124.3, 124.3]
+
+    # ADJUSTABLE
+    dt: 0.01
+    Tswing: 0.25
+    SwingPeriod_LIMITS: [0.1, 0.3]
+    BaseStepVelocity: 0.001
+    BaseClearanceHeight: 0.05
+    ClearanceHeight_LIMITS: [0.0, 0.14]
+    BasePenetrationDepth: 0.003
+    PenetrationDepth_LIMITS: [0.0, 0.02]
+
+    agent_num: 1

@@ -1,0 +1,28 @@
+/**:
+  ros__parameters:
+    # MEASURE (GIM 로봇 실측값)
+    shoulder_length: 0.0905
+    elbow_length: 0.210
+    wrist_length: 0.210
+    hip_x: 0.405
+    hip_y: 0.12
+    foot_x: 0.405
+    foot_y: 0.301
+    height: 0.30
+    com_offset: -0.04
+
+    # 관절 제한값 (IK 좌표계 기준, degrees)
+    joint_lo: [-30.0, -5.0, -165.0, -30.0, -5.0, -165.0, -30.0, -5.0, -165.0, -30.0, -5.0, -165.0]
+    joint_hi: [30.0, 125.0, 5.0, 30.0, 125.0, 5.0, 30.0, 125.0, 5.0, 30.0, 125.0, 5.0]
+
+    # ADJUSTABLE
+    dt: 0.01
+    Tswing: 0.25
+    SwingPeriod_LIMITS: [0.1, 0.3]
+    BaseStepVelocity: 0.001
+    BaseClearanceHeight: 0.04
+    ClearanceHeight_LIMITS: [0.0, 0.14]
+    BasePenetrationDepth: 0.008
+    PenetrationDepth_LIMITS: [0.0, 0.02]
+
+    agent_num: 1
